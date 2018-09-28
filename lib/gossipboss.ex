@@ -29,19 +29,21 @@ def main_(numNodes, topology, algorithm, percentage) do
 case algorithm do
   "gossip" ->
   case topology do
-    "line" -> 
-      Line.createTopology(numNodes, 0)
-      deactivate(percentage)
-      GenServer.cast(Line.actor_name(round(1)),{:message_gossip, :_sending})
+    "line" -> Line.createTopology(numNodes, 0)
+              deactivate(percentage)
+              GenServer.cast(Line.actor_name(round(1)),{:message_gossip, :_sending})
     "grid"   -> Grid.createTopology(size,false, 0)
                     deactivate(percentage)
-                    GenServer.cast(Grid.droid_name(round(size/2),round(size/2)),{:message_gossip, :_sending})
+                    GenServer.cast(Grid.actor_name(round(size/2),round(size/2)),{:message_gossip, :_sending})
     "i_grid" -> Grid.createTopology(size,true, 0)
                     deactivate(percentage)
-                    GenServer.cast(Grid.droid_name(round(size/2),round(size/2)),{:message_gossip, :_sending})
+                    GenServer.cast(Grid.actor_name(round(size/2),round(size/2)),{:message_gossip, :_sending})
     "full"   -> Full.createTopology(numNodes, 0)
                     deactivate(percentage)
-                    GenServer.cast(Full.droid_name(round(numNodes/2)),{:message_gossip, :_sending})
+                    GenServer.cast(Full.actor_name(round(numNodes/2)),{:message_gossip, :_sending})
+    "imperfectline" -> ImperfectLine.createTopology(numNodes, 0)
+              deactivate(percentage)
+              GenServer.cast(Line.actor_name(round(1)),{:message_gossip, :_sending})
     
     end
     "pushsum" -> 
@@ -51,13 +53,13 @@ case algorithm do
                       GenServer.cast(Line.actor_name(round(numNodes/2)),{:message_push_sum, { 0, 0}})
           "grid"   -> Grid.createTopology(size,false, 1)
                       deactivate(percentage)
-                      GenServer.cast(Grid.droid_name(round(size/2),round(size/2)),{:message_push_sum, { 0, 0}})
+                      GenServer.cast(Grid.actor_name(round(size/2),round(size/2)),{:message_push_sum, { 0, 0}})
           "i_grid" -> Grid.createTopology(size,true, 1)
                       deactivate(percentage) 
-                      GenServer.cast(Grid.droid_name(round(size/2),round(size/2)),{:message_push_sum, { 0, 0}})
+                      GenServer.cast(Grid.actor_name(round(size/2),round(size/2)),{:message_push_sum, { 0, 0}})
           "full"   -> Full.createTopology(numNodes, 1)
                       deactivate(percentage)
-                      GenServer.cast(Full.droid_name(round(numNodes/2)),{:message_push_sum, { 0, 0}})
+                      GenServer.cast(Full.actor_name(round(numNodes/2)),{:message_push_sum, { 0, 0}})
         end
 
 #Process.sleep(:infinity)

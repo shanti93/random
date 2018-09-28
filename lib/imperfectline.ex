@@ -1,4 +1,4 @@
-defmodule Line do
+defmodule ImperfectLine do
 use GenServer
 
 
@@ -37,9 +37,9 @@ end
 #Defining neighbors
   def actor_mates(self,n) do
     case self do
-      1 -> [actor_name(n), actor_name(2)] 
-      ^n -> [actor_name(n-1), actor_name(1)]
-      _ -> [actor_name(self-1), actor_name(self+1)]
+      1 -> [actor_name(n), actor_name(2),Enum.random(3..n-1)] 
+      ^n -> [actor_name(n-1), actor_name(1),Enum.random(2..n-2)]
+      _ -> [actor_name(self-1), actor_name(self+1),Enum.random(0..self-2,self+2..n)]
     end
   end
 
