@@ -13,7 +13,7 @@ use GenServer
     actors =
       for x <- 1..n do
         name = actorName(x)
-            #IO.puts(name)
+            ##IO.puts(name)
         GenServer.start_link(FullTopology, [x,n,gossipOrpushSum], name: name)
         name
       end
@@ -46,7 +46,7 @@ use GenServer
   # Sending
   def gossip(x,actorId, n,i,j) do
     chosen = chooseNeighborRandom(n)
-    IO.puts(chosen)
+    #IO.puts(chosen)
     case chosen == actorName(x) do
       true -> gossip(x,actorId, n,i,j)
       false ->
