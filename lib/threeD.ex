@@ -74,18 +74,17 @@ use GenServer
     {:noreply,[status,count+1 ,sent,size, x , y,z | neighbors]}
   end
 
-  def gossip(x,y,z,neighbors,pid) do
-    the_one = chooseNeighborRandom(neighbors)
-    #IO.puts(the_one)
-    GenServer.cast(the_one, {:message_gossip, :_sending})
+  def gossip(x,y,z,neighbors,actorId) do
+    chosen = chooseNeighborRandom(neighbors)
+    #IO.puts(chosen)
+    GenServer.cast(chosen, {:message_gossip, :_sending})
   end
 
     # GOSSIP - HANDLE FAILURE SEND retry in case the Node is inactive
-    def handle_cast({:retry_gossip, {pid}}, [status,count,sent,size,x,y,z| neighbors ] = state ) do
-      gossip(x,y,z,neighbors,pid)
+    def handle_cast({:retry_gossip, {actorId}}, [status,count,sent,size,x,y,z| neighbors ] = state ) do
+      gossip(x,y,z,neighbors,actorId)
       {:noreply,state}
     end
-
 
   #  Push-Sum algorithm for sum computation
 
@@ -107,22 +106,22 @@ use GenServer
   end
 
   # PUSHSUM  - SEND MAIN
-  def push_sum(s,w,neighbors,pid ,x,y,z) do
-    the_one = chooseNeighborRandom(neighbors)
-    case GenServer.call(the_one,:is_active) do
-      Active -> GenServer.cast(the_one,{:message_push_sum,{ s,w}})
+  def push_sum(s,w,neighbors,actorId ,x,y,z) do
+    chosen = chooseNeighborRandom(neighbors)
+    case GenServer.call(chosen,:is_active) do
+      Active -> GenServer.cast(chosen,{:message_push_sum,{ s,w}})
       ina_xy -> GenServer.cast(Master,{:actor_inactive, ina_xy})
                   new_mate = GenServer.call(Master,:handle_node_failure)
-                  GenServer.cast(self(),{:remove_mate,the_one})
+                  GenServer.cast(self(),{:remove_mate,chosen})
                   GenServer.cast(self(),{:add_new_mate,new_mate})
                   GenServer.cast(new_mate,{:add_new_mate,actorName(x,y,z)})
-                  GenServer.cast(self(),{:retry_push_sum,{s,w,pid}})
+                  GenServer.cast(self(),{:retry_push_sum,{s,w,actorId}})
     end
   end
 
   # PUSHSUM - HANDLE FAILURE SEND retry - in case the Node is inactive
-  def handle_cast({:retry_push_sum, {rec_s, rec_w,pid} }, [status,count,streak,prev_s_w,term, s ,w, n, x, y,z | neighbors ] = state ) do
-    push_sum(rec_s,rec_w,neighbors,pid ,x,y,z)
+  def handle_cast({:retry_push_sum, {rec_s, rec_w,actorId} }, [status,count,streak,prev_s_w,term, s ,w, n, x, y,z | neighbors ] = state ) do
+    push_sum(rec_s,rec_w,neighbors,actorId ,x,y,z)
     {:noreply,state}
   end
 
@@ -143,7 +142,7 @@ use GenServer
   end
 
    # NODE : Deactivation
-   def handle_cast({:deactivate, _},[ status |tail ] ) do
+   def handle_cast({:failNodes, _},[ status |tail ] ) do
     {:noreply,[ Inactive | tail]}
   end
 
