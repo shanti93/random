@@ -20,21 +20,9 @@ use GenServer
     GenServer.cast(Master,{:actors_update,actors})
   end
 
-  # NETWORK : Changing Network for Imperfect Grid
-  def randomify_mates([a,b|actors]) do
-    case actors do
-      [] -> ""
-      [_] -> ""
-      _ -> GenServer.cast(a,{:add_random_neighbor, b})
-           GenServer.cast(b,{:add_random_neighbor, a})
-           randomify_mates(actors)
-    end
-  end
 
-  # NETWORK : Changing Network for Imperfect Grid continued : Adding Random Neighbors
-  def handle_cast({:add_random_neighbor, new_mate}, state ) do
-    {:noreply,state ++ [new_mate]}
-  end
+
+  
 
   # NETWORK : Naming the node
   def actor_name(x,y) do
