@@ -41,6 +41,9 @@ case algorithm do
     "imperfectline" -> ImperfectLineTopology.createTopology(numNodes, 0)
               deactivate(percentage)
               GenServer.cast(ImperfectLineTopology.actor_name(round(1)),{:message_gossip, :_sending})
+    "threed"   -> ThreeDTopology.createTopology(size,false, 0)
+                    deactivate(percentage)
+                    GenServer.cast(ThreeDTopology.actor_name(round(size/2),round(size/2),round(size/2)),{:message_gossip, :_sending})
     
     end
     "pushsum" -> 
@@ -54,10 +57,12 @@ case algorithm do
           "full"   -> FullTopology.createTopology(numNodes, 1)
                       deactivate(percentage)
                       GenServer.cast(FullTopology.actor_name(round(numNodes/2)),{:message_push_sum, { 0, 0}})
-    "imperfectline" -> ImperfectLineTopology.createTopology(numNodes, 0)
-          "line"   -> ImperfectLineTopology.createTopology(numNodes, 1)
+          "imperfectline" -> ImperfectLineTopology.createTopology(numNodes, 0)
                       deactivate(percentage)
-                      GenServer.cast(ImperfectLineTopology.actor_name(round(numNodes/2)),{:message_push_sum, { 0, 0}})            
+                      GenServer.cast(ImperfectLineTopology.actor_name(round(numNodes/2)),{:message_push_sum, { 0, 0}})  
+          "threed"   -> ThreeDTopology.createTopology(size,false, 1)
+                      deactivate(percentage)
+                      GenServer.cast(ThreeDTopology.actor_name(round(size/2),round(size/2),round(size/2)),{:message_push_sum, {0,0}})          
         end
 
 #Process.sleep(:infinity)
