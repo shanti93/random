@@ -7,12 +7,13 @@ def handlefailure(args) do
         [numNodes_, topology, algorithm] = args
         {numNodes,_} = Integer.parse(numNodes_)
         percentage = 0
-        main_(numNodes, topology, algorithm, percentage)
+        mainfunction_(numNodes, topology, algorithm, percentage)
       4 ->
         [numNodes_, topology, algorithm, percentage_ ] = args
         {numNodes,_} = Integer.parse(numNodes_)
         {percentage,_} = Integer.parse(percentage_)
-        main_(numNodes, topology, algorithm, percentage)
+        mainfunction_(numNodes, topology, algorithm, percentage)
+      #Other scenario enter message and return
       _ -> IO.puts("please enter correct number of arguments")
     end
   end
@@ -20,7 +21,7 @@ def handlefailure(args) do
 
  ##Main function to handle input arguments - for now implementing gossip line!
 
-def main_(numNodes, topology, algorithm, percentage) do
+def mainfunction_(numNodes, topology, algorithm, percentage) do
  size =  round(Float.ceil(:math.sqrt(numNodes)))
  Gossip.boss(size)
 
@@ -69,12 +70,11 @@ case algorithm do
                       GenServer.cast(TorusTopology.actorName(round(size/2),round(size/2)),{:message_push_sum, { 0, 0}})
         end
 
-#Process.sleep(:infinity)
 end
-
-
-
  end
+
+
+
  def boss(nodesize) do
     GenServer.start_link(Gossip,nodesize, name: Master)
 end
