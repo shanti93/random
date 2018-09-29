@@ -13,7 +13,7 @@ Line, Full, Random 2D, Imperfect Line, Torus, 3D
 
 How to run?
 
-“mix run proj2.exs    <numNodes>  <topology>  <algorithm>“
+“mix run proj2.exs <numNodes“
 
 
 Bonus - Failure Scenario
