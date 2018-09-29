@@ -160,7 +160,7 @@ def deactivate(percentage) do
 
     # plots diagram at given instants of the whole network
   def draw_image(received, hibernated, terminated,actor,prev_actor, prev_actor_2, size,cast_num, dead_actors) do
-    IO.puts('Reacehd this')
+    IO.puts('Reached this')
     image = :egd.create(8*(size+1), 8*(size+1))
     fill1 = :egd.color({250,70,22})
     fill2 = :egd.color({0,33,164})
