@@ -1,4 +1,4 @@
-defmodule Grid do
+defmodule GridTopology do
 use GenServer
 
 ##Initiate Gossip or pushsum based on SecondArgument
@@ -14,7 +14,7 @@ use GenServer
     actors =
       for x <- 1..n, y<- 1..n do
         name = actor_name(x,y)
-        GenServer.start_link(Grid, [x,y,n, gossipOrpushSum], name: name)
+        GenServer.start_link(GridTopology, [x,y,n, gossipOrpushSum], name: name)
         name
       end
     GenServer.cast(Master,{:actors_update,actors})

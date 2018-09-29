@@ -1,4 +1,4 @@
-defmodule Full do
+defmodule FullTopology do
 use GenServer
 
 ##Initiate Gossip or pushsum based on SecondArgument
@@ -15,7 +15,7 @@ use GenServer
       for x <- 1..n do
         name = actor_name(x)
             #IO.puts(name)
-        GenServer.start_link(Full, [x,n,gossipOrpushSum], name: name)
+        GenServer.start_link(FullTopology, [x,n,gossipOrpushSum], name: name)
         name
       end
     GenServer.cast(Master,{:actors_update,actors})
