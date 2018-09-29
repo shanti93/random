@@ -1,4 +1,4 @@
-defmodule Line do
+defmodule LineTopology do
 use GenServer
 
 
@@ -17,7 +17,7 @@ def createTopology(n, gossipOrpushSum) do
       for x <- 1..n do
         name = actor_name(x)
         #IO.puts(name)
-        GenServer.start_link(Line, [x,n, gossipOrpushSum], name: name)
+        GenServer.start_link(LineTopology, [x,n, gossipOrpushSum], name: name)
         name
       end
     GenServer.cast(Master,{:actors_update,actors})
