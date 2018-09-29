@@ -1,6 +1,5 @@
 defmodule FullTopology do
 use GenServer
-
 ##Initiate Gossip or pushsum based on SecondArgument
   def init([x,n, gossipOrpushSum]) do
     case gossipOrpushSum do
@@ -8,8 +7,6 @@ use GenServer
       1 -> {:ok, [Active,0, 0, 0, 0, x, 1, n, x] } #[ Status of Actor, received count,streak,prev_s_w,to_terminate, s, w, n, nodeID | neighbors ]
     end
   end
-
-
   def createTopology(n, gossipOrpushSum \\ 0) do
     actors =
       for x <- 1..n do
@@ -20,23 +17,18 @@ use GenServer
       end
     GenServer.cast(Master,{:actors_update,actors})
   end
-
   # Naming the actor
   def actor_name(x) do
     a = x|> Integer.to_string |> String.pad_leading(7,"0")
     "Elixir.D"<>a
     |>String.to_atom
   end
-
-
   # NETWORK : Choosing a neigbor randomly to send message to
   def chooseNeighborRandom(neighbors) do
     :rand.uniform(neighbors)
     |> actor_name()
   end
-
-  # GOSSIP ###################################################################################
-
+  # Gossip Algorithm for information propagation ###################################################################################
   # GOSSIP - RECIEVE Main
   def handle_cast({:message_gossip, _received}, [status,count,sent,n,x ] =state ) do
     length = round(Float.ceil(:math.sqrt(n)))
@@ -49,7 +41,6 @@ use GenServer
     end
     {:noreply,[status,count+1 ,sent,n, x  ]}
   end
-
   # GOSSIP  - SEND Main
   def gossip(x,pid, n,i,j) do
     the_one = chooseNeighborRandom(n)
@@ -64,12 +55,9 @@ use GenServer
         end
       end
   end
-
   # GOSSIP - SEND retry in case the Node is inactive
   # ~ Not Necessary for full network
-
-  # NODE ###############################################################################################
-
+  # NODE
   # NODE : Checking status - Alive or Not
   def handle_call(:is_active , _from, state) do
     {status,n,x} =
@@ -92,16 +80,8 @@ use GenServer
     {:noreply,[ Inactive | tail]}
   end
 
-  # NODE : REMOVE inactive node from network
-  # ~ Not Necessary for FULL Network
-
-  # NODE : ADD another node to replace inactive node
-  # ~ Not Necessary for FULL Network
-
-
-  # PUSHSUM #######################################################################################
-
-  # PUSHSUM - RECIEVE Main
+  # Push-Sum algorithm for sum computation
+  # PUSHSUM - RECEIVE Main
   def handle_cast({:message_push_sum, {rec_s, rec_w} }, [status,count,streak,prev_s_w,term, s ,w, n, x] = state ) do
     length = round(Float.ceil(:math.sqrt(n)))
     i = rem(x-1,length) + 1
@@ -135,6 +115,4 @@ use GenServer
   end
   # PUSHSUM - SEND retry - in case the Node is inactive
   # ~ Not necessary for Full
-
-
 end
