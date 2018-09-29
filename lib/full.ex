@@ -3,32 +3,36 @@ use GenServer
 ##Initiate Gossip or pushsum based on SecondArgument
   def init([x,n, gossipOrpushSum]) do
     case gossipOrpushSum do
-      0 -> {:ok, [Active,0,0, n, x ] } #[ Status of Actor, received count, sent count, numNodes, nodeID | neighbors ]
-      1 -> {:ok, [Active,0, 0, 0, 0, x, 1, n, x] } #[ Status of Actor, received count,streak,prev_s_w,to_terminate, s, w, n, nodeID | neighbors ]
+      0 -> {:ok, [Active,0,0, n, x ] } #Denotes [Status of Actor, received count, sent count, numNodes, nodeID | neighbors ]
+      1 -> {:ok, [Active,0, 0, 0, 0, x, 1, n, x] } #Denotes [Status of Actor, received count,streak,prev_s_w,to_terminate, s, w, n, nodeID | neighbors ]
     end
   end
+
+  ## Network ##
+
+  #Creating Network FullTopology
   def createTopology(n, gossipOrpushSum \\ 0) do
     actors =
       for x <- 1..n do
-        name = actor_name(x)
+        name = actorName(x)
             #IO.puts(name)
         GenServer.start_link(FullTopology, [x,n,gossipOrpushSum], name: name)
         name
       end
     GenServer.cast(Master,{:actors_update,actors})
   end
-  # Naming the actor
-  def actor_name(x) do
+  # Providing a name to the Node
+  def actorName(x) do
     a = x|> Integer.to_string |> String.pad_leading(7,"0")
     "Elixir.D"<>a
     |>String.to_atom
   end
-  # NETWORK : Choosing a neigbor randomly to send message to
+    # Neighbor definition and choosing a randam neighbor to send the rumour
   def chooseNeighborRandom(neighbors) do
     :rand.uniform(neighbors)
-    |> actor_name()
+    |> actorName()
   end
-  # Gossip Algorithm for information propagation ###################################################################################
+  # Gossip Algorithm for information propagation
   # GOSSIP - RECIEVE Main
   def handle_cast({:message_gossip, _received}, [status,count,sent,n,x ] =state ) do
     length = round(Float.ceil(:math.sqrt(n)))
@@ -45,7 +49,7 @@ use GenServer
   def gossip(x,pid, n,i,j) do
     the_one = chooseNeighborRandom(n)
     IO.puts(the_one)
-    case the_one == actor_name(x) do
+    case the_one == actorName(x) do
       true -> gossip(x,pid, n,i,j)
       false ->
         case GenServer.call(the_one,:is_active) do
@@ -103,7 +107,7 @@ use GenServer
   # PUSHSUM  - SEND MAIN
   def push_sum(s,w,x,n,i,j) do
     the_one = chooseNeighborRandom(n)
-    case the_one == actor_name(x) do
+    case the_one == actorName(x) do
       true -> push_sum(s,w,x,n,i,j)
       false ->
         case GenServer.call(the_one,:is_active) do
