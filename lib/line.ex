@@ -10,8 +10,6 @@ use GenServer
     end
   end
 
-  ## Network ##
-
 #Creating Network LineTopology
 def createTopology(n, gossipOrpushSum) do
     actors =
@@ -47,7 +45,7 @@ end
   end
 
   ## Gossip Algorithm for information propagation
-#SEND Main
+# Sending
   def gossip(x,neighbors,actorId, n,i,j) do
     chosen = chooseNeighborRandom(neighbors)
     #IO.puts(x)
@@ -63,7 +61,7 @@ end
     end
   end
 
-#RECIEVE Main
+# Receiving
  def handle_cast({:message_gossip, _received}, [status,count,sent,n,x| neighbors ] =state ) do
     length = round(Float.ceil(:math.sqrt(n)))
     IO.puts(x)
@@ -79,7 +77,7 @@ end
  end
 
 
-# GOSSIP - HANDLE FAILURE SEND retry in case the Node is inactive
+# Handling failure scenario - Retry sending
   def handle_cast({:retry_gossip, {actorId,i,j}}, [status,count,sent,n,x| neighbors ] =state ) do
     gossip(x,neighbors,actorId, n,i,j)
     {:noreply,state}
@@ -87,7 +85,7 @@ end
 
   #Push-Sum algorithm for sum computation
 
-  # PUSHSUM - RECIEVE Main
+  # Receiving
   def handle_cast({:message_push_sum, {rec_s, rec_w} }, [status,count,streak,prev_s_w,term, s ,w, n, x | neighbors ] = state ) do
     length = round(Float.ceil(:math.sqrt(n)))
     i = rem(x-1,length) + 1
@@ -106,17 +104,14 @@ end
       end
   end
 
-  # PUSHSUM  - SEND MAIN
+  #Sending
   def push_sum(x,s,w,neighbors,actorId ,i,j) do
     chosen = chooseNeighborRandom(neighbors)
     IO.puts(chosen)
 GenServer.cast(chosen,{:message_push_sum,{ s,w}})
   end
 
-
-
-  ###random
-  # NODE : Checking status - Alive or Not
+  # The status of the node is checked if its active or not
   def handle_call(:is_active , _from, state) do
     {status,n,x} =
       case state do
@@ -133,18 +128,18 @@ GenServer.cast(chosen,{:message_push_sum,{ s,w}})
     end
   end
 
-   # NODE : Deactivation
+   # Failure Node scenario
   def handle_cast({:failNodes, _},[ status |tail ] ) do
     {:noreply,[ Inactive | tail]}
   end
 
-  # NODE : REMOVE inactive node from network
+  #The inactive node is removed from the network
   def handle_cast({:remove_mate, actor}, state ) do
     new_state = List.delete(state,actor)
     {:noreply,new_state}
   end
 
-  # NODE : ADD another node to replace inactive node
+  # To replace an inactive node, a new node is introduced
   def handle_cast({:add_new_mate, actor}, state ) do
     {:noreply, state ++ [actor]}
   end

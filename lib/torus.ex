@@ -10,8 +10,6 @@ use GenServer
     end
   end
 
-  ## Network ##
-
 #Creating Network TorusTopology
   def createTopology(n ,imperfect \\ false, gossipOrpushSum \\ 0) do
     actors =
@@ -36,7 +34,6 @@ use GenServer
     Enum.random(neighbors)
   end
 
-  # NETWORK : Choosing a neigbor randomly to send message to
   def actorNeighbors(nodeX,nodeY,n) do   #where n is length of grid / sqrt of size of network
     [l,r] =
         case nodeX do
@@ -53,9 +50,9 @@ use GenServer
     [actorName(l,nodeY),actorName(r,nodeY),actorName(t,nodeX),actorName(b,nodeX)]
   end
 
-  # PUSHSUM
+  # Push-Sum algorithm for sum computation
 
-  # PUSHSUM - RECIEVE Main
+  # Receiving
   def handle_cast({:message_push_sum, {rec_s, rec_w} }, [status,count,streak,prev_s_w,term, s ,w, n, x, y | neighbors ] = state ) do
     length = round(Float.ceil(:math.sqrt(n)))
     GenServer.cast(Master,{:received, [{x,y}]})
@@ -74,7 +71,7 @@ use GenServer
 
   ## Gossip Algorithm for information propagation
 
-  # GOSSIP - RECIEVE Main
+  # Receiving
   def handle_cast({:message_gossip, _received}, [status,count,sent,size,x,y| neighbors ] = state ) do
     case count < 100 do
       true ->
@@ -92,15 +89,37 @@ use GenServer
     GenServer.cast(chosen, {:message_gossip, :_sending})
   end
 
-    # GOSSIP - HANDLE FAILURE SEND retry in case the Node is inactive
+    # Handling failure scenario - Retry sending
     def handle_cast({:retry_gossip, {actorId}}, [status,count,sent,size,x,y| neighbors ] = state ) do
       gossip(x,y,neighbors,actorId)
       {:noreply,state}
     end
 
-  # NODE
+    #Push-Sum algorithm for sum computation
 
-  # NODE : Checking status - Alive or Not
+      #Sending
+      def push_sum(s,w,neighbors,actorId ,x,y) do
+        chosen = chooseNeighborRandom(neighbors)
+        case GenServer.call(chosen,:is_active) do
+          Active -> GenServer.cast(chosen,{:message_push_sum,{ s,w}})
+          ina_xy -> GenServer.cast(Master,{:actor_inactive, ina_xy})
+                      new_mate = GenServer.call(Master,:handle_node_failure)
+                      GenServer.cast(self(),{:remove_mate,chosen})
+                      GenServer.cast(self(),{:add_new_mate,new_mate})
+                      GenServer.cast(new_mate,{:add_new_mate,actorName(x,y)})
+                      GenServer.cast(self(),{:retry_push_sum,{s,w,actorId}})
+        end
+      end
+
+      # Handling failure scenario - Retry sending
+      def handle_cast({:retry_push_sum, {rec_s, rec_w,actorId} }, [status,count,streak,prev_s_w,term, s ,w, n, x, y | neighbors ] = state ) do
+        push_sum(rec_s,rec_w,neighbors,actorId ,x,y)
+        {:noreply,state}
+      end
+
+
+
+  # The status of the node is checked if its active or not
   def handle_call(:is_active,_from, state) do
     {status,x,y} =
       case state do
@@ -113,42 +132,20 @@ use GenServer
     end
   end
 
-   # NODE : Deactivation
+   # Failure Node scenario
    def handle_cast({:failNodes, _},[ status |tail ] ) do
     {:noreply,[ Inactive | tail]}
   end
 
-  # NODE : REMOVE inactive node from network
+  #The inactive node is removed from the network
   def handle_cast({:remove_mate, actor}, state ) do
     new_state = List.delete(state,actor)
     {:noreply,new_state}
   end
 
-  # NODE : ADD another node to replace inactive node
+  # To replace an inactive node, a new node is introduced
   def handle_cast({:add_new_mate, actor}, state ) do
     {:noreply, state ++ [actor]}
-  end
-
-##Push-Sum algorithm for sum computation
-
-  # PUSHSUM  - SEND MAIN
-  def push_sum(s,w,neighbors,actorId ,x,y) do
-    chosen = chooseNeighborRandom(neighbors)
-    case GenServer.call(chosen,:is_active) do
-      Active -> GenServer.cast(chosen,{:message_push_sum,{ s,w}})
-      ina_xy -> GenServer.cast(Master,{:actor_inactive, ina_xy})
-                  new_mate = GenServer.call(Master,:handle_node_failure)
-                  GenServer.cast(self(),{:remove_mate,chosen})
-                  GenServer.cast(self(),{:add_new_mate,new_mate})
-                  GenServer.cast(new_mate,{:add_new_mate,actorName(x,y)})
-                  GenServer.cast(self(),{:retry_push_sum,{s,w,actorId}})
-    end
-  end
-
-  # PUSHSUM - HANDLE FAILURE SEND retry - in case the Node is inactive
-  def handle_cast({:retry_push_sum, {rec_s, rec_w,actorId} }, [status,count,streak,prev_s_w,term, s ,w, n, x, y | neighbors ] = state ) do
-    push_sum(rec_s,rec_w,neighbors,actorId ,x,y)
-    {:noreply,state}
   end
 
 

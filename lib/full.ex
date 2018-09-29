@@ -8,8 +8,6 @@ use GenServer
     end
   end
 
-  ## Network ##
-
   #Creating Network FullTopology
   def createTopology(n, gossipOrpushSum \\ 0) do
     actors =
@@ -33,7 +31,7 @@ use GenServer
     |> actorName()
   end
   # Gossip Algorithm for information propagation
-  # GOSSIP - RECIEVE Main
+  # # Receiving
   def handle_cast({:message_gossip, _received}, [status,count,sent,n,x ] =state ) do
     length = round(Float.ceil(:math.sqrt(n)))
     i = rem(x-1,length) + 1
@@ -45,7 +43,7 @@ use GenServer
     end
     {:noreply,[status,count+1 ,sent,n, x  ]}
   end
-  # GOSSIP  - SEND Main
+  # Sending
   def gossip(x,actorId, n,i,j) do
     chosen = chooseNeighborRandom(n)
     IO.puts(chosen)
@@ -59,33 +57,9 @@ use GenServer
         end
       end
   end
-  # GOSSIP - SEND retry in case the Node is inactive
-  # ~ Not Necessary for full network
-  # NODE
-  # NODE : Checking status - Alive or Not
-  def handle_call(:is_active , _from, state) do
-    {status,n,x} =
-      case state do
-        [status,count,streak,prev_s_w,0, s ,w, n, x ] -> {status,n,x}
-        [status,count,sent,n,x ] -> {status,n,x}
-      end
-    case status == Active do
-      true -> {:reply, status, state }
-      false ->
-        length = round(Float.ceil(:math.sqrt(n)))
-        i = rem(x-1,length) + 1
-        j = round(Float.floor(((x-1)/length))) + 1
-        {:reply, [{i,j}], state }
-    end
-  end
-
-  # NODE : Deactivation
-  def handle_cast({:failNodes, _},[ status |tail ] ) do
-    {:noreply,[ Inactive | tail]}
-  end
 
   # Push-Sum algorithm for sum computation
-  # PUSHSUM - RECEIVE Main
+  # Receiving
   def handle_cast({:message_push_sum, {rec_s, rec_w} }, [status,count,streak,prev_s_w,term, s ,w, n, x] = state ) do
     length = round(Float.ceil(:math.sqrt(n)))
     i = rem(x-1,length) + 1
@@ -104,7 +78,7 @@ use GenServer
         end
   end
 
-  # PUSHSUM  - SEND MAIN
+  # Sending
   def push_sum(s,w,x,n,i,j) do
     chosen = chooseNeighborRandom(n)
     case chosen == actorName(x) do
@@ -117,6 +91,27 @@ use GenServer
         end
     end
   end
-  # PUSHSUM - SEND retry - in case the Node is inactive
-  # ~ Not necessary for Full
+
+  # The status of the node is checked if its active or not
+  def handle_call(:is_active , _from, state) do
+    {status,n,x} =
+      case state do
+        [status,count,streak,prev_s_w,0, s ,w, n, x ] -> {status,n,x}
+        [status,count,sent,n,x ] -> {status,n,x}
+      end
+    case status == Active do
+      true -> {:reply, status, state }
+      false ->
+        length = round(Float.ceil(:math.sqrt(n)))
+        i = rem(x-1,length) + 1
+        j = round(Float.floor(((x-1)/length))) + 1
+        {:reply, [{i,j}], state }
+    end
+  end
+
+  # # Failure Node scenario
+  def handle_cast({:failNodes, _},[ status |tail ] ) do
+    {:noreply,[ Inactive | tail]}
+  end
+
 end
