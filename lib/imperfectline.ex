@@ -114,7 +114,7 @@ end
   # PUSHSUM  - SEND MAIN
   def push_sum(x,s,w,mates,pid ,i,j) do
     the_one = chooseNeighborRandom(mates)
-    IO.puts(the_one)
+    #IO.puts(the_one)
 GenServer.cast(the_one,{:message_push_sum,{ s,w}})
   end
 

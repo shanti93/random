@@ -106,7 +106,7 @@ use GenServer
 
   def gossip(x,y,mates,pid) do
     the_one = chooseNeighborRandom(mates)
-    IO.puts(the_one)
+    #IO.puts(the_one)
     GenServer.cast(the_one, {:message_gossip, :_sending})
   end
 
