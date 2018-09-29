@@ -39,7 +39,7 @@ end
     case self do
       1 -> [actor_name(n), actor_name(2),Enum.random(3..n-1)]
       ^n -> [actor_name(n-1), actor_name(1),Enum.random(2..n-2)]
-      _ -> [actor_name(self-1), actor_name(self+1),Enum.random(0..self-2,self+2..n)]
+      _ -> [actor_name(self-1), actor_name(self+1),Enum.random([Enum.random(0..self-2),Enum.random(self+2..n)])]
     end
   end
 
