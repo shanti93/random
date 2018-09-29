@@ -6,7 +6,7 @@ use GenServer
     neighbors = actorNeighbors(x,y,z,n)
     case gossipOrpushSum do
       0 -> {:ok, [Active,0, 0, n*n, x, y, z | neighbors] } #Denotes [ Status of an Actor, received count, sent count, n, self_number_id-x,y,z | neighbors ]
-      1 -> {:ok, [Active,0, 0, 0, 0, x, 1, n*n , x, y, z| neighbors] } #Denotes [STatus of an Actor, received count,streak,prev_s_w,to_terminate, s, w, n, self_number_id-x,y,z | neighbors ]
+      1 -> {:ok, [Active,0, 0, 0, 0, x, 1, n*n , x, y, z| neighbors] } #Denotes [STatus of an Actor, received count,pushsumStreak,prevousSW,to_terminate, s, w, n, self_number_id-x,y,z | neighbors ]
     end
   end
 
@@ -87,18 +87,18 @@ use GenServer
   #  Push-Sum algorithm for sum computation
 
   # Receiving
-  def handle_cast({:message_push_sum, {rec_s, rec_w} }, [status,count,streak,prev_s_w,term, s ,w, n, x, y,z | neighbors ] = state ) do
+  def handle_cast({:message_push_sum, {receive_s, receive_w} }, [status,count,pushsumStreak,prevousSW,term, s ,w, n, x, y,z | neighbors ] = state ) do
     length = round(Float.ceil(:math.sqrt(n)))
     GenServer.cast(Master,{:received, [{x,y,z}]})
-      case abs(((s+rec_s)/(w+rec_w))-prev_s_w) < :math.pow(10,-10) do
-        false ->push_sum((s+rec_s)/2,(w+rec_w)/2,neighbors,self(),x,y,z)
-                {:noreply,[status,count+1, 0, (s+rec_s)/(w+rec_w), term, (s+rec_s)/2, (w+rec_w)/2, n, x, y,z  | neighbors]}
+      case abs(((s+receive_s)/(w+receive_w))-prevousSW) < :math.pow(10,-10) do
+        false ->push_sum((s+receive_s)/2,(w+receive_w)/2,neighbors,self(),x,y,z)
+                {:noreply,[status,count+1, 0, (s+receive_s)/(w+receive_w), term, (s+receive_s)/2, (w+receive_w)/2, n, x, y,z  | neighbors]}
         true ->
-          case streak + 1 == 3 do
+          case pushsumStreak + 1 == 3 do
             true ->  GenServer.cast(Master,{:hibernated, [{x,y,z}]})
-                      {:noreply,[status,count+1, streak+1, (s+rec_s)/(w+rec_w), 1, (s+rec_s), (w+rec_w), n, x, y,z  | neighbors]}
-            false -> push_sum((s+rec_s)/2,(w+rec_w)/2,neighbors,self(),x,y,z)
-                      {:noreply,[status,count+1, streak+1, (s+rec_s)/(w+rec_w), 0, (s+rec_s)/2, (w+rec_w)/2, n, x, y,z  | neighbors]}
+                      {:noreply,[status,count+1, pushsumStreak+1, (s+receive_s)/(w+receive_w), 1, (s+receive_s), (w+receive_w), n, x, y,z  | neighbors]}
+            false -> push_sum((s+receive_s)/2,(w+receive_w)/2,neighbors,self(),x,y,z)
+                      {:noreply,[status,count+1, pushsumStreak+1, (s+receive_s)/(w+receive_w), 0, (s+receive_s)/2, (w+receive_w)/2, n, x, y,z  | neighbors]}
           end
         end
   end
@@ -118,8 +118,8 @@ use GenServer
   end
 
   # Handling failure scenario - Retry sending
-  def handle_cast({:retry_push_sum, {rec_s, rec_w,actorId} }, [status,count,streak,prev_s_w,term, s ,w, n, x, y,z | neighbors ] = state ) do
-    push_sum(rec_s,rec_w,neighbors,actorId ,x,y,z)
+  def handle_cast({:retry_push_sum, {receive_s, receive_w,actorId} }, [status,count,pushsumStreak,prevousSW,term, s ,w, n, x, y,z | neighbors ] = state ) do
+    push_sum(receive_s,receive_w,neighbors,actorId ,x,y,z)
     {:noreply,state}
   end
 
@@ -127,7 +127,7 @@ use GenServer
   def handle_call(:is_active,_from, state) do
     {status,x,y,z} =
       case state do
-        [status,count,streak,prev_s_w,0, s ,w, n, x, y,z | neighbors ] -> {status,x,y,z}
+        [status,count,pushsumStreak,prevousSW,0, s ,w, n, x, y,z | neighbors ] -> {status,x,y,z}
         [status,count,sent,size,x,y,z| neighbors ] -> {status,x,y,z}
       end
     case status == Active do
