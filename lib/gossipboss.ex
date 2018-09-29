@@ -27,44 +27,44 @@ case algorithm do
   "gossip" ->
   case topology do
     "line" -> LineTopology.createTopology(numNodes, 0)
-              deactivate(percentage)
+              failNodes(percentage)
               GenServer.cast(LineTopology.actorName(round(1)),{:message_gossip, :_sending})
     "rand2D"   -> GridTopology.createTopology(size,false, 0)
-                    deactivate(percentage)
+                    failNodes(percentage)
                     GenServer.cast(GridTopology.actorName(round(size/2),round(size/2)),{:message_gossip, :_sending})
     "full"   -> FullTopology.createTopology(numNodes, 0)
-                    deactivate(percentage)
+                    failNodes(percentage)
                     GenServer.cast(FullTopology.actorName(round(numNodes/2)),{:message_gossip, :_sending})
     "imp2D" -> ImperfectLineTopology.createTopology(numNodes, 0)
-              deactivate(percentage)
+              failNodes(percentage)
               GenServer.cast(ImperfectLineTopology.actorName(round(1)),{:message_gossip, :_sending})
     "3D"   -> ThreeDTopology.createTopology(size,false, 0)
-                    deactivate(percentage)
+                    failNodes(percentage)
                     GenServer.cast(ThreeDTopology.actorName(round(size/2),round(size/2),round(size/2)),{:message_gossip, :_sending})
     "torus"   ->  TorusTopology.createTopology(size,false, 0)
-                    deactivate(percentage)
+                    failNodes(percentage)
                     GenServer.cast(TorusTopology.actorName(round(size/2),round(size/2)),{:message_gossip, :_sending})
 
     end
     "pushsum" ->
         case topology do
           "line"   -> LineTopology.createTopology(numNodes, 1)
-                      deactivate(percentage)
+                      failNodes(percentage)
                       GenServer.cast(LineTopology.actorName(round(numNodes/2)),{:message_push_sum, { 0, 0}})
           "rand2D"   -> GridTopology.createTopology(size,false, 1)
-                      deactivate(percentage)
+                      failNodes(percentage)
                       GenServer.cast(GridTopology.actorName(round(size/2),round(size/2)),{:message_push_sum, { 0, 0}})
           "full"   -> FullTopology.createTopology(numNodes, 1)
-                      deactivate(percentage)
+                      failNodes(percentage)
                       GenServer.cast(FullTopology.actorName(round(numNodes/2)),{:message_push_sum, { 0, 0}})
           "imp2D" -> ImperfectLineTopology.createTopology(numNodes, 0)
-                      deactivate(percentage)
+                      failNodes(percentage)
                       GenServer.cast(ImperfectLineTopology.actorName(round(numNodes/2)),{:message_push_sum, { 0, 0}})
           "3D"   -> ThreeDTopology.createTopology(size,false, 1)
-                      deactivate(percentage)
+                      failNodes(percentage)
                       GenServer.cast(ThreeDTopology.actorName(round(size/2),round(size/2),round(size/2)),{:message_push_sum, {0,0}})
           "torus"   -> TorusTopology.createTopology(size,false, 1)
-                      deactivate(percentage)
+                      failNodes(percentage)
                       GenServer.cast(TorusTopology.actorName(round(size/2),round(size/2)),{:message_push_sum, { 0, 0}})
         end
 
@@ -78,10 +78,10 @@ end
     GenServer.start_link(Gossip,nodesize, name: Master)
 end
 
-def deactivate(percentage) do
+def failNodes(percentage) do
     case percentage do
       0 -> ""
-      num -> GenServer.cast(Master,{:deactivate, percentage})
+      num -> GenServer.cast(Master,{:failNodes, percentage})
     end
   end
 
@@ -94,12 +94,12 @@ def deactivate(percentage) do
 
 
 
-  def handle_cast({:deactivate, percentage }, [_cast_num,_received, _hibernated,_prev_actor, _prev_actor_2, _r_count, _h_count,size, _draw_every,_init_time, actors, dead_actors]) do
-    num_deactivate = round(size*size*percentage / 100)
-    to_deactivate = Enum.take_random(actors,num_deactivate)
-    IO.puts("deactivated: #{inspect to_deactivate} ")
-    Enum.each to_deactivate, fn( actor ) ->
-      GenServer.cast(actor,{:deactivate, :you_are_getting_deactivated })
+  def handle_cast({:failNodes, percentage }, [_cast_num,_received, _hibernated,_prev_actor, _prev_actor_2, _r_count, _h_count,size, _draw_every,_init_time, actors, dead_actors]) do
+    num_failNodes = round(size*size*percentage / 100)
+    to_failNodes = Enum.take_random(actors,num_failNodes)
+    IO.puts("failNodes: #{inspect to_failNodes} ")
+    Enum.each to_failNodes, fn( actor ) ->
+      GenServer.cast(actor,{:failNodes, :you_are_getting_failNodesd })
     end
     {:noreply,[_cast_num,_received, _hibernated,_prev_actor, _prev_actor_2, _r_count, _h_count,size,_draw_every,_init_time,actors, dead_actors]}
   end
@@ -140,11 +140,11 @@ def deactivate(percentage) do
 
 
   # NODE - provide new neighbor to node that lost one neighbor due to failure
-  def handle_call(:handle_node_failure, {pid,_} ,[_cast_num,_received, _hibernated,_prev_actor, _prev_actor_2, _r_count, _h_count,_size, _draw_every,_init_time, actors,dead_actors]) do
+  def handle_call(:handle_node_failure, {actorId,_} ,[_cast_num,_received, _hibernated,_prev_actor, _prev_actor_2, _r_count, _h_count,_size, _draw_every,_init_time, actors,dead_actors]) do
     #IO.puts("inspecting #{inspect _from}")
     new_actor = Enum.random(actors)
     case :erlang.whereis(new_actor) do
-      ^pid -> new_actor = List.delete(actors,new_actor) |> Enum.random
+      ^actorId -> new_actor = List.delete(actors,new_actor) |> Enum.random
       _ -> ""
     end
     {:reply,new_actor,[_cast_num,_received, _hibernated,_prev_actor, _prev_actor_2, _r_count, _h_count,_size,_draw_every,_init_time,actors,dead_actors]}

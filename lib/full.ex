@@ -46,16 +46,16 @@ use GenServer
     {:noreply,[status,count+1 ,sent,n, x  ]}
   end
   # GOSSIP  - SEND Main
-  def gossip(x,pid, n,i,j) do
-    the_one = chooseNeighborRandom(n)
-    IO.puts(the_one)
-    case the_one == actorName(x) do
-      true -> gossip(x,pid, n,i,j)
+  def gossip(x,actorId, n,i,j) do
+    chosen = chooseNeighborRandom(n)
+    IO.puts(chosen)
+    case chosen == actorName(x) do
+      true -> gossip(x,actorId, n,i,j)
       false ->
-        case GenServer.call(the_one,:is_active) do
-          Active -> GenServer.cast(the_one, {:message_gossip, :_sending})
+        case GenServer.call(chosen,:is_active) do
+          Active -> GenServer.cast(chosen, {:message_gossip, :_sending})
                     ina_xy -> GenServer.cast(Master,{:actor_inactive, ina_xy})
-                    gossip(x,pid, n,i,j)
+                    gossip(x,actorId, n,i,j)
         end
       end
   end
@@ -80,7 +80,7 @@ use GenServer
   end
 
   # NODE : Deactivation
-  def handle_cast({:deactivate, _},[ status |tail ] ) do
+  def handle_cast({:failNodes, _},[ status |tail ] ) do
     {:noreply,[ Inactive | tail]}
   end
 
@@ -106,12 +106,12 @@ use GenServer
 
   # PUSHSUM  - SEND MAIN
   def push_sum(s,w,x,n,i,j) do
-    the_one = chooseNeighborRandom(n)
-    case the_one == actorName(x) do
+    chosen = chooseNeighborRandom(n)
+    case chosen == actorName(x) do
       true -> push_sum(s,w,x,n,i,j)
       false ->
-        case GenServer.call(the_one,:is_active) do
-          Active -> GenServer.cast(the_one,{:message_push_sum,{ s,w}})
+        case GenServer.call(chosen,:is_active) do
+          Active -> GenServer.cast(chosen,{:message_push_sum,{ s,w}})
           ina_xy -> GenServer.cast(Master,{:actor_inactive, ina_xy})
                     push_sum(s,w,x,n,i,j)
         end

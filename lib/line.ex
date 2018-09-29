@@ -48,18 +48,18 @@ end
 
   ## Gossip Algorithm for information propagation
 #SEND Main
-  def gossip(x,neighbors,pid, n,i,j) do
-    the_one = chooseNeighborRandom(neighbors)
+  def gossip(x,neighbors,actorId, n,i,j) do
+    chosen = chooseNeighborRandom(neighbors)
     #IO.puts(x)
-    #IO.puts(the_one )
-    case GenServer.call(the_one,:is_active) do
-      Active -> GenServer.cast(the_one, {:message_gossip, :_sending})
+    #IO.puts(chosen )
+    case GenServer.call(chosen,:is_active) do
+      Active -> GenServer.cast(chosen, {:message_gossip, :_sending})
       ina_xy -> GenServer.cast(Master,{:actor_inactive, ina_xy})
                 new_mate = GenServer.call(Master,:handle_node_failure)
-                GenServer.cast(self(),{:remove_mate,the_one})
+                GenServer.cast(self(),{:remove_mate,chosen})
                 GenServer.cast(self(),{:add_new_mate,new_mate})
                 GenServer.cast(new_mate,{:add_new_mate,actorName(x)})
-                GenServer.cast(self(),{:retry_gossip,{pid,i,j}})
+                GenServer.cast(self(),{:retry_gossip,{actorId,i,j}})
     end
   end
 
@@ -80,8 +80,8 @@ end
 
 
 # GOSSIP - HANDLE FAILURE SEND retry in case the Node is inactive
-  def handle_cast({:retry_gossip, {pid,i,j}}, [status,count,sent,n,x| neighbors ] =state ) do
-    gossip(x,neighbors,pid, n,i,j)
+  def handle_cast({:retry_gossip, {actorId,i,j}}, [status,count,sent,n,x| neighbors ] =state ) do
+    gossip(x,neighbors,actorId, n,i,j)
     {:noreply,state}
   end
 
@@ -107,10 +107,10 @@ end
   end
 
   # PUSHSUM  - SEND MAIN
-  def push_sum(x,s,w,neighbors,pid ,i,j) do
-    the_one = chooseNeighborRandom(neighbors)
-    IO.puts(the_one)
-GenServer.cast(the_one,{:message_push_sum,{ s,w}})
+  def push_sum(x,s,w,neighbors,actorId ,i,j) do
+    chosen = chooseNeighborRandom(neighbors)
+    IO.puts(chosen)
+GenServer.cast(chosen,{:message_push_sum,{ s,w}})
   end
 
 
@@ -134,7 +134,7 @@ GenServer.cast(the_one,{:message_push_sum,{ s,w}})
   end
 
    # NODE : Deactivation
-  def handle_cast({:deactivate, _},[ status |tail ] ) do
+  def handle_cast({:failNodes, _},[ status |tail ] ) do
     {:noreply,[ Inactive | tail]}
   end
 
