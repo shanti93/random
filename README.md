@@ -30,8 +30,8 @@ Here we considered failedPercent to be percentage of inactive nodes – where th
 Maximum manageable network for various topologies
 
 	            Gossip	        Push-Sum
-Line	        1024	        512
-Full	        100000	        2048
+Line	           1024	        512
+Full	          100000	        2048
 Random 2D Grid	100000	        4096
 3D	            100000	        2048
 Torus	        100000	        4096
