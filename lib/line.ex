@@ -17,13 +17,13 @@ def createTopology(n, gossipOrpushSum) do
     actors =
       for x <- 1..n do
         name = actorName(x)
-        #IO.puts(name)
+        ##IO.puts(name)
         GenServer.start_link(LineTopology, [x,n, gossipOrpushSum], name: name)
         name
       end
     GenServer.cast(Master,{:actors_update,actors})
-    #IO.puts(n)
-    #IO.puts(gossipOrpushSum)
+    ##IO.puts(n)
+    ##IO.puts(gossipOrpushSum)
 end
 
 #Providing a name to the Node
@@ -50,8 +50,8 @@ end
 #SEND Main
   def gossip(x,neighbors,actorId, n,i,j) do
     chosen = chooseNeighborRandom(neighbors)
-    #IO.puts(x)
-    #IO.puts(chosen )
+    ##IO.puts(x)
+    ##IO.puts(chosen )
     case GenServer.call(chosen,:is_active) do
       Active -> GenServer.cast(chosen, {:message_gossip, :_sending})
       ina_xy -> GenServer.cast(Master,{:actor_inactive, ina_xy})
@@ -66,10 +66,10 @@ end
 #RECIEVE Main
  def handle_cast({:message_gossip, _received}, [status,count,sent,n,x| neighbors ] =state ) do
     length = round(Float.ceil(:math.sqrt(n)))
-    IO.puts(x)
+    #IO.puts(x)
     i = rem(x-1,length) + 1
     j = round(Float.floor(((x-1)/length))) + 1
-    #IO.puts(count)
+    ##IO.puts(count)
     case count < 200 do
       true ->  GenServer.cast(Master,{:received, [{i,j}]})
                gossip(x,neighbors,self,n,i,j)
@@ -109,7 +109,7 @@ end
   # PUSHSUM  - SEND MAIN
   def push_sum(x,s,w,neighbors,actorId ,i,j) do
     chosen = chooseNeighborRandom(neighbors)
-    IO.puts(chosen)
+    #IO.puts(chosen)
 GenServer.cast(chosen,{:message_push_sum,{ s,w}})
   end
 

@@ -76,7 +76,7 @@ use GenServer
 
   def gossip(x,y,z,neighbors,actorId) do
     chosen = chooseNeighborRandom(neighbors)
-    #IO.puts(chosen)
+    ##IO.puts(chosen)
     GenServer.cast(chosen, {:message_gossip, :_sending})
   end
 
