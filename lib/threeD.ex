@@ -86,7 +86,6 @@ use GenServer
       {:noreply,state}
     end
 
-
   #  Push-Sum algorithm for sum computation
 
   # PUSHSUM - RECIEVE Main
