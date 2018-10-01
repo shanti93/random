@@ -1,6 +1,6 @@
-0Project 2
-Keerthana  Bhuthala. 				Santhi  Sushma  Katragadda
-5251-1292 						1748-9431
+							Project 2
+		Keerthana  Bhuthala. 				Santhi  Sushma  Katragadda
+5		251-1292 						1748-9431
 
 
 
@@ -13,9 +13,10 @@ Line, Full, Random 2D, Imperfect Line, Torus, 3D
 
 How to run?
 
-<<<<<<< HEAD
-“mix run proj2.exs <numNodes“
-=======
+mix run proj2.exs <numNodes> <topology> <algorithm>
+
+
+
 “mix run proj2.exs  <numNodes>  <topology>  <algorithm>"
 >>>>>>> c5f03e8190a6205ed56e2e3dcc0bbfdf6bb48a15
 
