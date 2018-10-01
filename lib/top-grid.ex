@@ -19,23 +19,8 @@ use GenServer
         name
       end
     GenServer.cast(Master,{:actors_update,actors})
-    case imperfect do
-      true -> randomify_neighbors( Enum.shuffle(actors) )
-              "Imperfect Grid: #{inspect actors}"
-      false -> "2D Grid: #{inspect actors}"
-    end
   end
 
-  # Adding random neighbors
-  def randomify_neighbors([a,b|actors]) do
-    case actors do
-      [] -> ""
-      [_] -> ""
-      _ -> GenServer.cast(a,{:add_random_neighbor, b})
-           GenServer.cast(b,{:add_random_neighbor, a})
-           randomify_neighbors(actors)
-    end
-  end
 
   def handle_cast({:add_random_neighbor, new_mate}, state ) do
     {:noreply,state ++ [new_mate]}

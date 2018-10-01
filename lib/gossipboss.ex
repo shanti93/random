@@ -6,17 +6,12 @@ defmodule Gossip do
     {:ok, [1,[],[],[{1,1}],[{1,1}],0,0,size,1,0,[],[] ]}
   end
 
-def handlefailure(args) do
+def main(args) do
     case length(args) do
       3 ->
         [numNodes_, topology, algorithm] = args
         {numNodes,_} = Integer.parse(numNodes_)
         percentageOfFailedNodes = 0
-        mainfunction_(numNodes, topology, algorithm, percentageOfFailedNodes)
-      4 ->
-        [numNodes_, topology, algorithm, percentageOfFailedNodes_ ] = args
-        {numNodes,_} = Integer.parse(numNodes_)
-        {percentageOfFailedNodes,_} = Integer.parse(percentageOfFailedNodes_)
         mainfunction_(numNodes, topology, algorithm, percentageOfFailedNodes)
       #Other scenario enter message and return
       _ -> IO.puts("please enter correct number of arguments")
@@ -29,53 +24,43 @@ def handlefailure(args) do
 def mainfunction_(numNodes, topology, algorithm, percentageOfFailedNodes) do
  size =  round(Float.ceil(:math.sqrt(numNodes)))
  Gossip.boss(size)
-
+prev = System.monotonic_time(:milliseconds)
 case algorithm do
   "gossip" ->
   case topology do
     "line" -> LineTopology.createTopology(numNodes, 0)
-              failNodes(percentageOfFailedNodes)
               GenServer.cast(LineTopology.actorName(round(1)),{:message_gossip, :_sending})
-    "rand2D"   -> GridTopology.createTopology(size,false, 0)
-                    failNodes(percentageOfFailedNodes)
+    "rand2D"   -> GridTopology.createTopology(size,false, 0)                 
                     GenServer.cast(GridTopology.actorName(round(size/2),round(size/2)),{:message_gossip, :_sending})
-    "full"   -> FullTopology.createTopology(numNodes, 0)
-                    failNodes(percentageOfFailedNodes)
+    "full"   -> FullTopology.createTopology(numNodes, 0)                
                     GenServer.cast(FullTopology.actorName(round(numNodes/2)),{:message_gossip, :_sending})
-    "imp2D" -> ImperfectLineTopology.createTopology(numNodes, 0)
-              failNodes(percentageOfFailedNodes)
+    "imp2D" -> ImperfectLineTopology.createTopology(numNodes, 0)     
               GenServer.cast(ImperfectLineTopology.actorName(round(1)),{:message_gossip, :_sending})
-    "3D"   -> ThreeDTopology.createTopology(size,false, 0)
-                    failNodes(percentageOfFailedNodes)
+    "3D"   -> ThreeDTopology.createTopology(size,false, 0)                  
                     GenServer.cast(ThreeDTopology.actorName(round(size/2),round(size/2),round(size/2)),{:message_gossip, :_sending})
-    "torus"   ->  TorusTopology.createTopology(size,false, 0)
-                    failNodes(percentageOfFailedNodes)
+    "torus"   ->  TorusTopology.createTopology(size,false, 0)                 
                     GenServer.cast(TorusTopology.actorName(round(size/2),round(size/2)),{:message_gossip, :_sending})
 
     end
     "pushsum" ->
         case topology do
-          "line"   -> LineTopology.createTopology(numNodes, 1)
-                      failNodes(percentageOfFailedNodes)
-                      GenServer.cast(LineTopology.actorName(round(numNodes/2)),{:message_push_sum, { 0, 0}})
-          "rand2D"   -> GridTopology.createTopology(size,false, 1)
-                      failNodes(percentageOfFailedNodes)
+          "line"   -> 
+                      LineTopology.createTopology(numNodes, 1)                      
+                      GenServer.cast(LineTopology.actorName(round(numNodes/2)),{:message_push_sum, { 0, 0}})                   
+          "rand2D"   -> GridTopology.createTopology(size,false, 1)                     
                       GenServer.cast(GridTopology.actorName(round(size/2),round(size/2)),{:message_push_sum, { 0, 0}})
-          "full"   -> FullTopology.createTopology(numNodes, 1)
-                      failNodes(percentageOfFailedNodes)
+          "full"   -> FullTopology.createTopology(numNodes, 1)                     
                       GenServer.cast(FullTopology.actorName(round(numNodes/2)),{:message_push_sum, { 0, 0}})
-          "imp2D" -> ImperfectLineTopology.createTopology(numNodes, 0)
-                      failNodes(percentageOfFailedNodes)
+          "imp2D" -> ImperfectLineTopology.createTopology(numNodes, 0)                     
                       GenServer.cast(ImperfectLineTopology.actorName(round(numNodes/2)),{:message_push_sum, { 0, 0}})
-          "3D"   -> ThreeDTopology.createTopology(size,false, 1)
-                      failNodes(percentageOfFailedNodes)
+          "3D"   -> ThreeDTopology.createTopology(size,false, 1)                     
                       GenServer.cast(ThreeDTopology.actorName(round(size/2),round(size/2),round(size/2)),{:message_push_sum, {0,0}})
           "torus"   -> TorusTopology.createTopology(size,false, 1)
-                      failNodes(percentageOfFailedNodes)
                       GenServer.cast(TorusTopology.actorName(round(size/2),round(size/2)),{:message_push_sum, { 0, 0}})
         end
 
 end
+IO.puts "Time required to converge : " <> to_string(System.monotonic_time(:milliseconds) - prev) <> "ms"
  end
 
 
